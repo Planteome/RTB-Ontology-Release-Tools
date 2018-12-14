@@ -1,16 +1,26 @@
-##### test pyobo
+#!/usr/bin/env python3
+
+import argparse
+from pathlib import Path
 import pyobo
 
+parser = argparse.ArgumentParser(description='Generate Amigo-friendly OBO file.')
+parser.add_argument('crop_name', type=str, help='Crop name for use in Amigo')
+parser.add_argument('input_path', type=Path, help='Input OBO Path')
+parser.add_argument('output_path', type=Path, help='Output OBO Path')
+args = parser.parse_args()
+
+
 ### open RTB master obo file
-with open("/Users/marie-angeliquelaporte/Documents/GitHub/ibp-cassava-traits/cassava_trait.obo") as myobo:
+with args.input_path.open() as myobo:
     o = pyobo(myobo)
 
 ### open the current amigo file - will only add what change?
     
 ##### save the amigo file
-outputfile = open('/Users/marie-angeliquelaporte/Downloads/cassava-trait-ontology_with-cropname.obo', 'w')
+outputfile = args.output_path.open('w')
 
-crop = "cassava" + " "
+crop = args.crop_name.strip() + " "
 #### remove auto-generated-by default-namespace and namespace-id-rule
 del o.header["auto-generated-by"]
 del o.header["default-namespace"]
