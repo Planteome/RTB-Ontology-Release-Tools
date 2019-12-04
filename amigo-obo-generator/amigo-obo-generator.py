@@ -28,7 +28,7 @@ crop = args.crop_name.strip() + " "
 #### remove auto-generated-by default-namespace and namespace-id-rule
 del o.header["auto-generated-by"]
 del o.header["default-namespace"]
-del o.header["namespace-id-rule"]
+#del o.header["namespace-id-rule"]
 
 outputfile.writelines(str(o.header))
 outputfile.writelines("\n\n")
