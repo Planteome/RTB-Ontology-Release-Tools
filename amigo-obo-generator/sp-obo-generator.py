@@ -46,7 +46,7 @@ for index, row in df.iterrows():
     #varSyn_other = row["Variable synonyms"].strip()
     varCreator  = str(row["Scientist"]).strip()
     varCreationDate  = str(row["Date"]).strip()
-    varCrop  = str(row["Crop"]).strip()
+    varCrop  = str(row["Crop"]).strip().replace(" ", "") ##needed for sweetpotato
     traitID  = str(row["Trait ID"]).strip()
     traitName  = row["Trait name"].strip().lower()
     traitClass  = row["Trait class"].strip()
@@ -88,10 +88,17 @@ for index, row in df.iterrows():
         if varClass is not None:
             variable.superclasses().add(varClass)
         else:
-            print("Variable class not added for term:"+variable.name)
+            varClass = next((x for x in o.terms() if x.name == "Variables"), None)
+            if varClass is not None:
+                variable.superclasses().add(varClass)
+            else:
+                print("Variable class not added for term:"+variable.name)
 
-    
-    variable.namespace = varCrop+"Trait" 
+    if varCrop == "Cassava":
+        variable.namespace = "cassava_trait"
+    else:
+        variable.namespace = varCrop+"Trait"
+     
     
     if varSyn:
         for vs in varSyn.split(","):
@@ -106,18 +113,29 @@ for index, row in df.iterrows():
         trait.superclasses().add(o[traitClass])  
     except: 
         ### id is numerical
-        ### superclasses should already be in ontolgy
+        ### WARNING: superclasses should already be in ontolgy
         traitC = next((x for x in o.terms() if x.name == traitClass), None)
         if traitC is not None:
             trait.superclasses().add(traitC)
         else:
-            traitC = next((x for x in o.terms() if x.name == traitClass+"_trait"), None)
+            traitC = next((x for x in o.terms() if x.name == traitClass+" trait"), None) ## might need _trait as well
             if traitC is not None:
                 trait.superclasses().add(traitC)
             else:
-                print("Trait class not added for term:"+trait.name)
+                traitS = next((x for x in o.terms() if x.name == traitClass.replace(" ", "_")+"_trait"), None) ## might need _trait as well
+                if traitS is not None:
+                    trait.superclasses().add(traitS)
+                else:
+                    traitH = next((x for x in o.terms() if x.name == traitClass.split("Quality/")[1]+" trait"), None) ## removing the quality/xxxx
+                    if traitH is not None:
+                        trait.superclasses().add(traitH)
+                    else:
+                        print("Trait class not added for term:"+trait.name)
     
-    trait.namespace = varCrop+"Trait" 
+    if varCrop == "Cassava":
+        trait.namespace = "cassava_trait"
+    else:
+        trait.namespace = varCrop+"Trait" 
 
     if traitSyn:
         for ts in traitSyn.split(","):
@@ -137,9 +155,16 @@ for index, row in df.iterrows():
         methodC = next((x for x in o.terms() if x.name == methodClass), None)
         if methodC is not None:
             method.superclasses().add(methodC)
-        else:
-            print("Method class not added for term:"+method.name)
-    
+        else: ## adding to the generic Method class
+            methodS = next((x for x in o.terms() if x.name == methodClass.replace(" ", "_")), None)
+            if methodS is not None:
+                method.superclasses().add(methodS)
+            else:
+                methodG = next((x for x in o.terms() if x.name == "Methods"), None)
+                method.superclasses().add(methodG)
+                #print("Method class not added for term:"+method.name)
+                print("Method has been added under the generic Method Class:"+method.name)
+
     method.namespace = varCrop+"Method"
     
     method.relationships = {methodOf: {o[traitID]}}
@@ -156,9 +181,12 @@ for index, row in df.iterrows():
         scaleC = next((x for x in o.terms() if x.name == scaleClass), None)
         if scaleC is not None:
             scale.superclasses().add(scaleC)
-        else:
-            print("Scale class not added for term:"+scale.name)
-    
+        else: ## add class to the generic scale
+            scaleG = next((x for x in o.terms() if x.name == "Scales"), None)
+            scale.superclasses().add(scaleG)
+            #print("Scale class not added for term:"+scale.name)
+            print("Scale has been added under the generic Scale Class:"+scale.name)
+
     scale.namespace = varCrop+"Scale"
     
     scale.relationships = {scaleOf: {o[methodID]}}
